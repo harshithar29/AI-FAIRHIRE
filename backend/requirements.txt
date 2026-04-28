@@ -9,3 +9,7 @@ google-cloud-storage==2.10.0
 google-cloud-firestore==2.11.1
 python-dotenv==1.0.0
 reportlab==4.0.4
+pip freeze > requirements.txt
+git add .
+git commit -m "add requirements"
+git push
