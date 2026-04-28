@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI FairHire Pro | Enterprise Bias Intelligence Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        :root {
+            /* Premium Light Color Palette */
+            --primary: #FF7A5C;
+            --primary-dark: #E86545;
+            --primary-light: #FF9B82;
+            --primary-glow: rgba(255, 122, 92, 0.3);
+            --secondary: #8B7CF6;
+            --secondary-glow: rgba(139, 124, 246, 0.25);
+            --accent: #5ECFFF;
+            --accent-glow: rgba(94, 207, 255, 0.2);
+            
+            /* Background Gradients */
+            --bg-gradient-start: #FFF5F0;
+            --bg-gradient-mid: #FFF0F5;
+            --bg-gradient-end: #FFF8F0;
+            
+            /* Surface Colors */
+            --surface: rgba(255, 255, 255, 0.92);
+            --surface-hover: rgba(255, 255, 255, 0.98);
+            --surface-glass: rgba(255, 255, 255, 0.7);
+            
+            /* Text Colors */
+            --text-primary: #2D2D2D;
+            --text-secondary: #5A5A5A;
+            --text-muted: #8A8A8A;
+            
+            /* Border */
+            --border: rgba(255, 122, 92, 0.15);
+            
+            /* Status */
+            --success: #10B981;
+            --warning: #F59E0B;
+            --error: #EF4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-mid) 50%, var(--bg-gradient-end) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Soft Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(255, 122, 92, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(139, 124, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 50%, rgba(94, 207, 255, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Layout */
+        .app {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Premium Sidebar - Glassmorphism */
+        .sidebar {
+            width: 280px;
+            background: var(--surface-glass);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border);
+            padding: 32px 20px;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.03);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 48px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px var(--primary-glow);
+            animation: floatSoft 3s ease-in-out infinite;
+        }
+
+        @keyframes floatSoft {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .logo h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            color: var(--text-secondary);
+            border-radius: 14px;
+            margin-bottom: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 122, 92, 0.08), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-item:hover::before {
+            left: 100%;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 122, 92, 0.08);
+            color: var(--primary);
+            transform: translateX(6px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 8px 20px var(--primary-glow);
+        }
+
+        .main {
+            margin-left: 280px;
+            padding: 32px 40px;
+            width: calc(100% - 280px);
+        }
+
+        /* Premium Header - Glass Effect */
+        .header {
+            background: var(--surface-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 24px;
+            padding: 20px 32px;
+            margin-bottom: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            background: rgba(16, 185, 129, 0.12);
+            border-radius: 40px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+
+        /* Premium Cards - 3D Floating Effect */
+        .card {
+            background: var(--surface);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 24px;
+            padding: 28px;
+            margin-bottom: 28px;
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.02);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 40px rgba(0, 0, 0, 0.08), 0 4px 8px rgba(0, 0, 0, 0.02);
+            background: var(--surface-hover);
+        }
+
+        .card:hover::after {
+            opacity: 1;
+        }
+
+        /* Premium Buttons - 3D Gradient */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            color: white;
+            padding: 12px 28px;
+            font-weight: 600;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 20px var(--primary-glow), inset 0 1px 0 rgba(255,255,255,0.2);
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px var(--primary-glow);
+        }
+
+        .btn-primary:active {
+            transform: translateY(2px);
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 24px;
+            padding: 50px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 122, 92, 0.02);
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(255, 122, 92, 0.06);
+            transform: scale(1.01);
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-bottom: 28px;
+        }
+
+        .metric-card {
+            background: var(--surface);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 20px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--primary);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
+        }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 12px 0;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            margin: 20px 0;
+        }
+
+        /* Table */
+        .table-wrapper {
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        th {
+            background: rgba(255, 122, 92, 0.08);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .sensitive-col {
+            background: rgba(139, 124, 246, 0.06);
+            border-left: 3px solid var(--secondary);
+        }
+
+        /* Recommendations */
+        .rec-item {
+            background: rgba(255, 122, 92, 0.04);
+            border-left: 3px solid var(--primary);
+            padding: 15px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            transition: all 0.3s;
+        }
+
+        .rec-item:hover {
+            background: rgba(255, 122, 92, 0.08);
+            transform: translateX(5px);
+        }
+
+        /* Chatbot - 3D Floating */
+        .chatbot-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+        }
+
+        .chatbot-toggle {
+            width: 55px;
+            height: 55px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 8px 20px var(--primary-glow);
+            transition: all 0.3s;
+            animation: floatChat 3s ease-in-out infinite;
+        }
+
+        @keyframes floatChat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        .chatbot-toggle:hover {
+            transform: scale(1.08);
+        }
+
+        .chatbot-window {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: 350px;
+            height: 500px;
+            background: var(--surface-glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: 24px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+        }
+
+        .chatbot-window.open {
+            display: flex;
+        }
+
+        .chatbot-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .chatbot-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .message {
+            max-width: 85%;
+            padding: 10px 14px;
+            border-radius: 16px;
+            font-size: 0.85rem;
+        }
+
+        .message.user {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            align-self: flex-end;
+        }
+
+        .message.ai {
+            background: rgba(0, 0, 0, 0.05);
+            color: var(--text-secondary);
+            align-self: flex-start;
+        }
+
+        .chatbot-input {
+            display: flex;
+            padding: 15px;
+            gap: 10px;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .chatbot-input input {
+            flex: 1;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.03);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            border-radius: 40px;
+            color: var(--text-primary);
+            outline: none;
+        }
+
+        .chatbot-input input:focus {
+            border-color: var(--primary);
+        }
+
+        .chatbot-input button {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 40px;
+            cursor: pointer;
+            color: white;
+        }
+
+        /* Loading */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(233, 102, 228, 0.95);
+            backdrop-filter: blur(12px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 122, 92, 0.2);
+            border-top-color: var(--primary);
+            border-right-color: var(--secondary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Screens */
+        .screen { display: none; }
+        .screen.active { display: block; animation: fadeIn 0.4s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .hidden { display: none; }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); position: fixed; }
+            .main { margin-left: 0; width: 100%; padding: 20px; }
+            .metrics-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="sidebar">
+            <div class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <h2>Fair<span style="color: var(--primary);">Hire</span>Pro</h2>
+            </div>
+            <div class="nav-item active" onclick="showScreen('dashboard')">
+                <i class="fas fa-chart-pie"></i> Dashboard
+            </div>
+            <div class="nav-item" onclick="showScreen('upload')">
+                <i class="fas fa-upload"></i> Upload Data
+            </div>
+            <div class="nav-item" onclick="showScreen('report')">
+                <i class="fas fa-chart-line"></i> Bias Report
+            </div>
+            <div class="nav-item" onclick="showScreen('insights')">
+                <i class="fas fa-robot"></i> AI Consultant
+            </div>
+        </div>
+
+        <div class="main">
+            <div class="header">
+                <h1>Bias Intelligence Platform</h1>
+                <div class="status-badge" id="statusBadge">
+                    <div class="status-dot"></div>
+                    <span>AI Ready</span>
+                </div>
+            </div>
+
+            <div id="screen-dashboard" class="screen active">
+                <div class="card" style="text-align: center;">
+                    <div style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary), var(--secondary)); border-radius: 40px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 12px 28px var(--primary-glow);">
+                        <i class="fas fa-microchip" style="font-size: 2.5rem; color: rgb(227, 148, 148);"></i>
+                    </div>
+                    <h2 style="font-size: 2rem; margin-bottom: 16px;">AI FairHire Pro</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 24px;">Enterprise-grade bias detection for fair decision-making</p>
+                    <button class="btn-primary" onclick="showScreen('upload')">Launch Analysis →</button>
+                </div>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <i class="fas fa-chart-line" style="font-size: 1.8rem; color: var(--primary);"></i>
+                        <h3 style="margin: 12px 0;">Disparate Impact</h3>
+                        <p>EEOC 4/5ths Rule compliance</p>
+                    </div>
+                    <div class="metric-card">
+                        <i class="fas fa-balance-scale" style="font-size: 1.8rem; color: var(--primary);"></i>
+                        <h3 style="margin: 12px 0;">80% Threshold</h3>
+                        <p>Industry fairness standard</p>
+                    </div>
+                    <div class="metric-card">
+                        <i class="fas fa-lightbulb" style="font-size: 1.8rem; color: var(--primary);"></i>
+                        <h3 style="margin: 12px 0;">Actionable Fixes</h3>
+                        <p>AI-powered recommendations</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="screen-upload" class="screen">
+                <div class="card">
+                    <h2>Upload Dataset</h2>
+                    <p style="color: var(--text-secondary); margin: 8px 0 24px;">CSV file with demographic and outcome columns</p>
+                    <div class="upload-area" id="uploadArea" onclick="document.getElementById('csvFile').click()">
+                        <i class="fas fa-file-csv" style="font-size: 3rem; color: var(--primary); margin-bottom: 16px;"></i>
+                        <p>Click or drag CSV file here</p>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Supported columns: gender, race, age, hired, approved</p>
+                        <input type="file" id="csvFile" accept=".csv" style="display: none;" onchange="uploadFile(this)">
+                    </div>
+                    <div id="uploadProgress" class="hidden" style="text-align: center; padding: 40px;">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 16px;">Analyzing data...</p>
+                    </div>
+                </div>
+                <div id="previewContainer" class="hidden"></div>
+            </div>
+
+            <div id="screen-report" class="screen">
+                <div id="reportContent"></div>
+            </div>
+
+            <div id="screen-insights" class="screen">
+                <div id="insightsContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chatbot-container">
+        <div class="chatbot-toggle" onclick="toggleChatbot()">
+            <i class="fas fa-comment-dots"></i>
+        </div>
+        <div class="chatbot-window" id="chatbotWindow">
+            <div class="chatbot-header">
+                <span><i class="fas fa-robot"></i> AI Assistant</span>
+                <i class="fas fa-times" onclick="toggleChatbot()" style="cursor: pointer;"></i>
+            </div>
+            <div class="chatbot-messages" id="chatMessages">
+                <div class="message ai">Hello! Ask me about bias detection, fairness metrics, or recommendations.</div>
+            </div>
+            <div class="chatbot-input">
+                <input type="text" id="chatInput" placeholder="Ask a question..." onkeypress="if(event.key==='Enter') sendMessage()">
+                <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p id="loadingMessage">Analyzing bias patterns...</p>
+        </div>
+    </div>
+
+    <script>
+        let currentData = null;
+        let biasChart = null;
+        let socket = null;
+
+        function initSocket() {
+            socket = io();
+            socket.on('chat_response', (data) => {
+                addMessage(data.response, 'ai');
+            });
+        }
+        initSocket();
+
+        function showLoading(show, message) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (show) {
+                document.getElementById('loadingMessage').textContent = message;
+                overlay.style.display = 'flex';
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+
+        function showScreen(screen) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(`screen-${screen}`).classList.add('active');
+        }
+
+        async function uploadFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            
+            showLoading(true, "Reading CSV file...");
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const res = await fetch('/api/analyze', { method: 'POST', body: formData });
+                const data = await res.json();
+                
+                if (data.success) {
+                    currentData = data;
+                    showPreview(data);
+                    showReport(data);
+                    showInsights(data);
+                    showLoading(false);
+                    showScreen('report');
+                } else {
+                    showLoading(false);
+                    alert('Error: ' + data.error);
+                }
+            } catch(e) {
+                showLoading(false);
+                alert('Connection error. Make sure backend is running.');
+            }
+        }
+
+        function showPreview(data) {
+            const headers = Object.keys(data.preview_data[0]);
+            let html = `<div class="card">
+                <h3>${data.file_name}</h3>
+                <div style="display: flex; gap: 12px; margin: 16px 0; flex-wrap: wrap;">
+                    <span style="background: rgba(255,122,92,0.1); padding: 4px 12px; border-radius: 20px;">${data.total_records} records</span>
+                    <span style="background: rgba(139,124,246,0.1); padding: 4px 12px; border-radius: 20px;">Sensitive: ${data.detected_demographic}</span>
+                    <span style="background: rgba(94,207,255,0.1); padding: 4px 12px; border-radius: 20px;">Outcome: ${data.detected_outcome}</span>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>`;
+            headers.forEach(h => {
+                html += `<th class="${h === data.detected_demographic ? 'sensitive-col' : ''}">${h}</th>`;
+            });
+            html += `<tr></thead><tbody>`;
+            data.preview_data.forEach(row => {
+                html += `<tr>`;
+                headers.forEach(h => {
+                    let val = row[h];
+                    if (String(val).toLowerCase() === 'yes') val = 'Yes';
+                    if (String(val).toLowerCase() === 'no') val = 'No';
+                    html += `<td class="${h === data.detected_demographic ? 'sensitive-col' : ''}">${val || '-'}啃踴`;
+                });
+                html += `</tr>`;
+            });
+            html += `</tbody></table>
+                </div>
+                <button class="btn-primary" style="margin-top: 20px;" onclick="showScreen('report')">View Analysis →</button>
+            </div>`;
+            document.getElementById('previewContainer').innerHTML = html;
+            document.getElementById('previewContainer').classList.remove('hidden');
+        }
+
+        function showReport(data) {
+            if (biasChart) biasChart.destroy();
+            
+            const groups = Object.keys(data.rates);
+            const rates = Object.values(data.rates);
+            
+            const html = `
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <h3>Disparate Impact</h3>
+                        <div class="metric-value">${data.disparate_impact}%</div>
+                        <p style="color: var(--text-muted);">${data.disparate_impact < 80 ? 'Below 80% threshold' : 'Meets 80% threshold'}</p>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Highest Rate</h3>
+                        <div class="metric-value">${data.max_rate}%</div>
+                        <p style="color: var(--text-muted);">${data.max_group}</p>
+                    </div>
+                    <div class="metric-card">
+                        <h3>Lowest Rate</h3>
+                        <div class="metric-value">${data.min_rate}%</div>
+                        <p style="color: var(--text-muted);">${data.min_group}</p>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3><i class="fas fa-chart-bar" style="margin-right: 10px; color: var(--primary);"></i> Selection Rates by Group</h3>
+                    <canvas id="biasChartCanvas" style="max-height: 350px; width: 100%;"></canvas>
+                </div>
+                
+                <div class="card" style="border-left: 4px solid ${data.bias_detected ? '#EF4444' : '#10B981'};">
+                    <h3>${data.bias_detected ? 'Bias Detected - Action Required' : 'Fair System - Compliant'}</h3>
+                    <p style="margin-top: 12px; line-height: 1.6; color: var(--text-secondary);">${data.explanation}</p>
+                    <p style="margin-top: 12px;"><strong>AI Confidence:</strong> ${data.ai_confidence}%</p>
+                </div>
+                
+                <div style="text-align: center;">
+                    <button class="btn-primary" onclick="showScreen('insights')">View Recommendations →</button>
+                </div>
+            `;
+            
+            document.getElementById('reportContent').innerHTML = html;
+            
+            const ctx = document.getElementById('biasChartCanvas')?.getContext('2d');
+            if (ctx) {
+                biasChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: groups,
+                        datasets: [{
+                            label: 'Selection Rate (%)',
+                            data: rates,
+                            backgroundColor: 'rgba(255, 122, 92, 0.85)',
+                            borderColor: 'rgba(255, 122, 92, 1)',
+                            borderWidth: 1,
+                            borderRadius: 8,
+                            barPercentage: 0.65
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { position: 'top', labels: { color: '#5A5A5A', font: { size: 12 } } },
+                            tooltip: { callbacks: { label: (ctx) => `${ctx.raw}% selection rate` } }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, max: 100, grid: { color: 'rgba(0,0,0,0.05)' }, title: { display: true, text: 'Selection Rate (%)', color: '#5A5A5A' }, ticks: { color: '#5A5A5A', stepSize: 20 } },
+                            x: { grid: { display: false }, title: { display: true, text: 'Demographic Groups', color: '#5A5A5A' }, ticks: { color: '#5A5A5A' } }
+                        }
+                    }
+                });
+            }
+        }
+
+        function showInsights(data) {
+            let recHtml = '';
+            data.recommendations.forEach((rec, idx) => {
+                recHtml += `
+                    <div class="rec-item">
+                        <strong style="color: var(--primary);">${idx + 1}. ${rec.split(' - ')[0]}</strong>
+                        <p style="margin-top: 6px; color: var(--text-muted);">${rec.includes(' - ') ? rec.split(' - ')[1] : rec}</p>
+                    </div>
+                `;
+            });
+            
+            const html = `
+                <div class="card">
+                    <h3><i class="fas fa-brain" style="margin-right: 10px; color: var(--primary);"></i> AI Analysis</h3>
+                    <div style="margin-top: 16px; background: rgba(0,0,0,0.02); padding: 20px; border-radius: 16px;">
+                        <p style="line-height: 1.6; color: var(--text-secondary);">${data.explanation}</p>
+                        <div style="display: flex; gap: 20px; margin-top: 16px; flex-wrap: wrap;">
+                            <span><strong>Confidence:</strong> ${data.ai_confidence}%</span>
+                            <span><strong>Method:</strong> Disparate Impact</span>
+                            <span><strong>Standard:</strong> EEOC 4/5ths Rule</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h3><i class="fas fa-lightbulb" style="margin-right: 10px; color: var(--secondary);"></i> Recommendations</h3>
+                    ${recHtml}
+                </div>
+                
+                <div class="card">
+                    <h3><i class="fas fa-chart-simple" style="margin-right: 10px; color: var(--accent);"></i> Summary</h3>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 20px;">
+                        <div><strong>File:</strong><br>${data.file_name}</div>
+                        <div><strong>Records:</strong><br>${data.total_records}</div>
+                        <div><strong>Demographic:</strong><br>${data.detected_demographic}</div>
+                        <div><strong>Outcome:</strong><br>${data.detected_outcome}</div>
+                        <div><strong>Disparate Impact:</strong><br><span style="color: ${data.disparate_impact < 80 ? '#EF4444' : '#10B981'}">${data.disparate_impact}%</span></div>
+                        <div><strong>Status:</strong><br>${data.bias_detected ? 'Action Required' : 'Compliant'}</div>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('insightsContent').innerHTML = html;
+        }
+
+        function toggleChatbot() {
+            document.getElementById('chatbotWindow').classList.toggle('open');
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            addMessage(message, 'user');
+            input.value = '';
+            
+            if (socket) {
+                socket.emit('chat_message', { message: message });
+            } else {
+                setTimeout(() => {
+                    addMessage("I can help you understand bias detection. Ask me about metrics like Disparate Impact or recommendations.", 'ai');
+                }, 500);
+            }
+        }
+
+        function addMessage(text, sender) {
+            const container = document.getElementById('chatMessages');
+            const div = document.createElement('div');
+            div.className = `message ${sender}`;
+            div.textContent = text;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        const uploadArea = document.getElementById('uploadArea');
+        if (uploadArea) {
+            uploadArea.addEventListener('dragover', e => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#FF7A5C';
+            });
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.style.borderColor = 'rgba(255, 122, 92, 0.15)';
+            });
+            uploadArea.addEventListener('drop', e => {
+                e.preventDefault();
+                uploadArea.style.borderColor = 'rgba(255, 122, 92, 0.15)';
+                const file = e.dataTransfer.files[0];
+                if (file && file.name.endsWith('.csv')) {
+                    document.getElementById('csvFile').files = e.dataTransfer.files;
+                    uploadFile(document.getElementById('csvFile'));
+                } else {
+                    alert('Please upload a CSV file');
+                }
+            });
+        }
+    </script>
+</body>
+</html>
